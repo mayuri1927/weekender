@@ -1,0 +1,301 @@
+// Weekender — Phase 1 + Phase 2 Schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Phase 1 Enums
+// ─────────────────────────────────────────────
+
+enum KycStatus {
+  KYC_PENDING
+  KYC_IN_PROGRESS
+  KYC_VERIFIED
+  KYC_FAILED
+  KYC_RETRY_REQUIRED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum DevicePlatform {
+  IOS
+  ANDROID
+}
+
+// ─────────────────────────────────────────────
+// Phase 2 Enums
+// ─────────────────────────────────────────────
+
+enum ActivityStatus {
+  DRAFT
+  OPEN
+  FULL
+  CANCELLED
+  COMPLETED
+}
+
+enum ActivityVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum ActivityCategory {
+  SPORTS
+  SOCIAL
+  ADVENTURE
+  FUN
+  CREATIVE
+  ENTERTAINMENT
+}
+
+enum ActivityType {
+  OPEN      // Join immediately up to max capacity
+  REQUEST   // Participants request; host approves (enforcement Phase 4)
+}
+
+enum ParticipantStatus {
+  JOINED
+  LEFT
+  REMOVED
+  PENDING   // Phase 4: awaiting host approval on REQUEST-type activity
+  REJECTED  // Phase 4: host rejected the request; terminal in V1
+}
+
+// ─────────────────────────────────────────────
+// User — authentication anchor
+// ─────────────────────────────────────────────
+
+model User {
+  id             String    @id @default(uuid())
+  firebaseUid    String    @unique @map("firebase_uid")
+  // Phone stored as SHA-256 hash for dedup checks only.
+  // Encrypted value stored separately for OTP lookup by backend only.
+  // NEVER returned in API responses.
+  phoneHash      String    @unique @map("phone_hash")
+  phoneEncrypted String    @map("phone_encrypted")
+  kycStatus      KycStatus @default(KYC_PENDING) @map("kyc_status")
+  isActive       Boolean   @default(true) @map("is_active")
+  deletedAt      DateTime? @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  profile          UserProfile?
+  deviceTokens     DeviceToken[]
+  hostedActivities Activity[]
+  userInterests    UserInterest[]
+  participations   ActivityParticipant[]
+
+  @@index([firebaseUid])
+  @@index([phoneHash])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// UserProfile — public-facing data
+// ─────────────────────────────────────────────
+
+model UserProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique @map("user_id")
+  // name and gender: optional until Phase 2 onboarding collects them.
+  name        String?
+  // DOB stored; age >= 18 enforced at registration AND on every update.
+  dateOfBirth DateTime @map("date_of_birth")
+  gender      Gender?
+  bio         String?
+  languages   String[] @default([])
+  photoUrl    String?  @map("photo_url")
+  // Phase 2: city and area
+  cityId      String?  @map("city_id")
+  areaId      String?  @map("area_id")
+  isComplete  Boolean  @default(false) @map("is_complete")
+  // JSONB notification preferences.
+  notificationPreferences Json @default("{\"join_request_received\":true,\"join_approved\":true,\"activity_reminder\":true,\"chat_messages\":false,\"call_invite\":true,\"location_finalized\":true,\"activity_cancelled\":true,\"weekly_digest\":false}") @map("notification_preferences")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+  city City? @relation(fields: [cityId], references: [id])
+  area Area? @relation(fields: [areaId], references: [id])
+
+  @@index([userId])
+  @@index([cityId])
+  @@map("user_profiles")
+}
+
+// ─────────────────────────────────────────────
+// DeviceToken — Firebase Cloud Messaging
+// ─────────────────────────────────────────────
+
+model DeviceToken {
+  id        String         @id @default(uuid())
+  userId    String         @map("user_id")
+  fcmToken  String         @map("fcm_token")
+  platform  DevicePlatform
+  isActive  Boolean        @default(true) @map("is_active")
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([userId, fcmToken])
+  @@index([userId])
+  @@map("device_tokens")
+}
+
+// ─────────────────────────────────────────────
+// Geography — cities and areas
+// ─────────────────────────────────────────────
+
+model City {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  state     String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  areas      Area[]
+  profiles   UserProfile[]
+  activities Activity[]
+
+  @@map("cities")
+}
+
+model Area {
+  id        String   @id @default(uuid())
+  cityId    String   @map("city_id")
+  name      String
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  city       City          @relation(fields: [cityId], references: [id])
+  profiles   UserProfile[]
+  activities Activity[]
+
+  @@unique([cityId, name])
+  @@index([cityId])
+  @@map("areas")
+}
+
+// ─────────────────────────────────────────────
+// Interests
+// ─────────────────────────────────────────────
+
+model InterestCategory {
+  id           String     @id @default(uuid())
+  name         String     @unique
+  displayOrder Int        @default(0) @map("display_order")
+  isActive     Boolean    @default(true) @map("is_active")
+  createdAt    DateTime   @default(now()) @map("created_at")
+  updatedAt    DateTime   @updatedAt @map("updated_at")
+
+  interests Interest[]
+
+  @@map("interest_categories")
+}
+
+model Interest {
+  id           String           @id @default(uuid())
+  categoryId   String           @map("category_id")
+  name         String
+  displayOrder Int              @default(0) @map("display_order")
+  isActive     Boolean          @default(true) @map("is_active")
+  createdAt    DateTime         @default(now()) @map("created_at")
+  updatedAt    DateTime         @updatedAt @map("updated_at")
+
+  category      InterestCategory @relation(fields: [categoryId], references: [id])
+  userInterests UserInterest[]
+
+  @@unique([categoryId, name])
+  @@index([categoryId])
+  @@map("interests")
+}
+
+model UserInterest {
+  userId     String   @map("user_id")
+  interestId String   @map("interest_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  user     User     @relation(fields: [userId], references: [id])
+  interest Interest @relation(fields: [interestId], references: [id])
+
+  @@id([userId, interestId])
+  @@map("user_interests")
+}
+
+// ─────────────────────────────────────────────
+// Activities
+// ─────────────────────────────────────────────
+
+model Activity {
+  id              String             @id @default(uuid())
+  hostId          String             @map("host_id")
+  title           String
+  description     String
+  category        ActivityCategory
+  activityType    ActivityType       @default(OPEN) @map("activity_type")
+  cityId          String             @map("city_id")
+  areaId          String?            @map("area_id")
+  scheduledDate   DateTime           @map("scheduled_date")
+  startTime       String             @map("start_time")
+  endTime         String?            @map("end_time")
+  maxParticipants Int                @map("max_participants")
+  minParticipants Int?               @map("min_participants")
+  status          ActivityStatus     @default(OPEN)
+  visibility      ActivityVisibility @default(PUBLIC)
+  coverImageUrl   String?            @map("cover_image_url")
+  reminderSentAt  DateTime?          @map("reminder_sent_at")
+  deletedAt       DateTime?          @map("deleted_at")
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  host         User                  @relation(fields: [hostId], references: [id])
+  city         City                  @relation(fields: [cityId], references: [id])
+  area         Area?                 @relation(fields: [areaId], references: [id])
+  participants ActivityParticipant[]
+
+  @@index([hostId])
+  @@index([cityId])
+  @@index([areaId])
+  @@index([scheduledDate])
+  @@index([status])
+  @@index([category])
+  @@map("activities")
+}
+
+// ─────────────────────────────────────────────
+// ActivityParticipant — Phase 3
+// ─────────────────────────────────────────────
+
+model ActivityParticipant {
+  id         String            @id @default(uuid())
+  activityId String            @map("activity_id")
+  userId     String            @map("user_id")
+  status     ParticipantStatus @default(JOINED)
+  joinedAt   DateTime          @default(now()) @map("joined_at")
+  leftAt     DateTime?         @map("left_at")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
+
+  activity Activity @relation(fields: [activityId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
+
+  @@unique([activityId, userId])
+  @@index([activityId])
+  @@index([userId])
+  @@index([activityId, status])
+  @@map("activity_participants")
+}

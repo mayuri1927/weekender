@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment — NEVER commit
+.env
+.env.local
+.env.production
+.env.staging
+.env.*
+
+# Test coverage
+coverage/
+
+# Prisma generated client
+generated/
+
+# Logs
+*.log

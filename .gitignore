@@ -1,0 +1,89 @@
+# ─── Secrets — NEVER commit these ───────────────────────
+.env
+.env.local
+.env.production
+.env.staging
+.env.*.local
+*.pem
+*.key
+*.p8
+*.p12
+
+# ─── OS ──────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ─── Editor / IDE ────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*.iml
+
+# ─── Claude Code ────────────────────────────────────────
+.claude/
+
+# ─── Backend (NestJS) ────────────────────────────────────
+backend/node_modules/
+backend/dist/
+backend/coverage/
+backend/.env
+backend/.env.*
+backend/prisma/migrations/*.sql.bak
+backend/generated/
+
+# ─── Mobile (Flutter) ────────────────────────────────────
+mobile/.dart_tool/
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.flutter-plugins
+mobile/coverage/
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/app/google-services.json
+mobile/ios/Pods/
+mobile/ios/Runner/GoogleService-Info.plist
+mobile/ios/.symlinks/
+mobile/ios/Flutter/ephemeral/
+
+# ─── Admin (Next.js) ────────────────────────────────────
+admin/node_modules/
+admin/.next/
+admin/out/
+admin/build/
+admin/.env.local
+admin/.env
+admin/.env.*
+admin/next-env.d.ts
+admin/*.tsbuildinfo
+
+# ─── Infrastructure ──────────────────────────────────────
+infrastructure/.terraform/
+infrastructure/*.tfstate
+infrastructure/*.tfstate.backup
+infrastructure/.terraform.lock.hcl
+
+# ─── Docker ──────────────────────────────────────────────
+docker-compose.override.yml
+
+# ─── Logs ────────────────────────────────────────────────
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ─── Firebase ────────────────────────────────────────────
+.firebase/
+.firebaserc
+
+# ─── Test artifacts ──────────────────────────────────────
+coverage/
+*.lcov

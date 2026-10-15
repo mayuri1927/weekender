@@ -1,0 +1,97 @@
+{
+  "@@locale": "en",
+  "appName": "Weekender",
+  "@appName": { "description": "Application name" },
+
+  "welcomeTitle": "Find something to do.\nFind people to do it with.",
+  "@welcomeTitle": { "description": "Welcome screen headline" },
+
+  "continueWithPhone": "Continue with phone",
+  "@continueWithPhone": {},
+
+  "enterPhoneNumber": "Enter your phone number",
+  "@enterPhoneNumber": {},
+
+  "phoneNumberHint": "+91 98765 43210",
+  "@phoneNumberHint": {},
+
+  "sendOtp": "Send code",
+  "@sendOtp": {},
+
+  "enterOtp": "Enter the code sent to {phone}",
+  "@enterOtp": {
+    "placeholders": {
+      "phone": { "type": "String" }
+    }
+  },
+
+  "verifyOtp": "Verify",
+  "@verifyOtp": {},
+
+  "resendOtp": "Resend code",
+  "@resendOtp": {},
+
+  "resendOtpIn": "Resend in {seconds}s",
+  "@resendOtpIn": {
+    "placeholders": {
+      "seconds": { "type": "int" }
+    }
+  },
+
+  "invalidOtp": "That code doesn't match. Try again.",
+  "@invalidOtp": {},
+
+  "phoneRequired": "Phone number is required",
+  "@phoneRequired": {},
+
+  "invalidPhone": "Enter a valid Indian mobile number",
+  "@invalidPhone": {},
+
+  "enterYourName": "What's your name?",
+  "@enterYourName": {},
+
+  "namePlaceholder": "Full name",
+  "@namePlaceholder": {},
+
+  "nameRequired": "Your name is required",
+  "@nameRequired": {},
+
+  "enterDateOfBirth": "When were you born?",
+  "@enterDateOfBirth": {},
+
+  "ageRequirement": "You must be 18 or older to join Weekender",
+  "@ageRequirement": {},
+
+  "underAgeError": "You need to be at least 18 years old to use Weekender",
+  "@underAgeError": {},
+
+  "selectGender": "How do you identify?",
+  "@selectGender": {},
+
+  "genderMale": "Man",
+  "@genderMale": {},
+
+  "genderFemale": "Woman",
+  "@genderFemale": {},
+
+  "genderNonBinary": "Non-binary",
+  "@genderNonBinary": {},
+
+  "genderPreferNotToSay": "Prefer not to say",
+  "@genderPreferNotToSay": {},
+
+  "continueButton": "Continue",
+  "@continueButton": {},
+
+  "errorGeneric": "Something went wrong. Try again.",
+  "@errorGeneric": {},
+
+  "errorNetwork": "No internet connection. Check your connection and try again.",
+  "@errorNetwork": {},
+
+  "errorSessionExpired": "Your session expired. Please log in again.",
+  "@errorSessionExpired": {},
+
+  "loading": "Loading…",
+  "@loading": {}
+}
