@@ -68,6 +68,12 @@ class ActivitiesRepository {
 
   // ─── Host approval actions (Phase 4) ──────────────────────────────────────
 
+  Future<void> removeParticipant(
+      String activityId, String participantId) async {
+    await _dio
+        .delete('/activities/$activityId/participants/$participantId');
+  }
+
   Future<Map<String, dynamic>> approveParticipant(
       String activityId, String participantId) async {
     final response = await _dio

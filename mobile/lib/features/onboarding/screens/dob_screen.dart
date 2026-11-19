@@ -78,7 +78,7 @@ class _DobScreenState extends ConsumerState<DobScreen> {
       await _repo.updateProfile(dateOfBirth: dob);
 
       if (!mounted) return;
-      context.go('/home');
+      context.go('/onboarding/profile');
     } on DioException catch (e) {
       final statusCode = e.response?.statusCode;
       final serverMessage =

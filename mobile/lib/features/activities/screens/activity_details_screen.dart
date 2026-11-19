@@ -128,6 +128,24 @@ class _ActivityDetailsScreenState
     }
   }
 
+  Future<void> _remove(String participantId) async {
+    setState(() { _actionInProgress = true; _error = null; });
+    try {
+      await ActivitiesRepository()
+          .removeParticipant(widget.activityId, participantId);
+      if (mounted) {
+        ref.invalidate(participantsProvider(widget.activityId));
+        ref.invalidate(activityDetailProvider(widget.activityId));
+        ref.invalidate(activitiesListProvider);
+      }
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'];
+      setState(() => _error = (msg is String) ? msg : 'Could not remove participant.');
+    } finally {
+      if (mounted) setState(() => _actionInProgress = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final activityAsync =
@@ -250,8 +268,15 @@ class _ActivityDetailsScreenState
                   Text('Participants',
                       style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
-                  ...joinedList.map((p) =>
-                      _ParticipantTile(participant: p as Map)),
+                  ...joinedList.map((p) {
+                    final pMap = p as Map;
+                    return _ParticipantTile(
+                      participant: pMap,
+                      onRemove: isHost && !_actionInProgress
+                          ? () => _remove(pMap['id'] as String)
+                          : null,
+                    );
+                  }),
                 ],
 
                 // Pending requests — visible to host only
@@ -559,8 +584,9 @@ class _HostTile extends StatelessWidget {
 
 class _ParticipantTile extends StatelessWidget {
   final Map participant;
+  final VoidCallback? onRemove;
 
-  const _ParticipantTile({required this.participant});
+  const _ParticipantTile({required this.participant, this.onRemove});
 
   @override
   Widget build(BuildContext context) {
@@ -581,7 +607,17 @@ class _ParticipantTile extends StatelessWidget {
                 : null,
           ),
           const SizedBox(width: 10),
-          Text(name, style: Theme.of(context).textTheme.bodyMedium),
+          Expanded(
+              child: Text(name, style: Theme.of(context).textTheme.bodyMedium)),
+          if (onRemove != null)
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline,
+                  size: 20, color: Colors.red),
+              tooltip: 'Remove participant',
+              onPressed: onRemove,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
         ],
       ),
     );
